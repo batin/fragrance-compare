@@ -97,14 +97,22 @@ export default function Home() {
   const hasFilters = Boolean(brand || note || accord);
 
   return (
-    <main className="max-w-5xl mx-auto p-6 w-full flex flex-col gap-6 pb-24">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-semibold tracking-tight">Find your next scent</h1>
-        <p className="text-muted-foreground">
-          Search {" "}
-          <span className="font-medium text-foreground">24,000+</span> perfumes, compare notes side
-          by side, and discover similar fragrances.
-        </p>
+    <main className="max-w-5xl mx-auto p-6 w-full flex flex-col gap-8 pb-24">
+      <div className="relative overflow-hidden rounded-3xl border bg-card px-6 py-10 sm:px-10 sm:py-14">
+        <div className="pointer-events-none absolute -top-24 -right-24 size-64 rounded-full bg-primary/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-24 size-64 rounded-full bg-primary/10 blur-3xl" />
+        <div className="relative flex flex-col gap-3">
+          <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight">
+            Find your next{" "}
+            <span className="bg-gradient-to-r from-primary to-foreground bg-clip-text text-transparent">
+              signature scent
+            </span>
+          </h1>
+          <p className="text-muted-foreground text-base sm:text-lg max-w-xl">
+            Search <span className="font-semibold text-foreground">24,000+</span> perfumes, compare
+            notes side by side, and discover fragrances with a similar soul.
+          </p>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-xs">
@@ -157,7 +165,7 @@ export default function Home() {
           <Card
             key={p.id}
             className={cn(
-              "relative gap-3 transition-shadow hover:shadow-md",
+              "relative gap-3 transition-all hover:-translate-y-1 hover:shadow-lg",
               selected.includes(p.id) && "ring-2 ring-primary",
             )}
           >
@@ -169,9 +177,9 @@ export default function Home() {
             />
             <Link href={`/perfume/${p.id}`} className="flex flex-col gap-3">
               <CardHeader className="flex-row items-center gap-3">
-                <Avatar size="lg">
+                <Avatar size="lg" className="ring-2 ring-primary/20 ring-offset-2 ring-offset-card">
                   {p.imageUrl && <AvatarImage src={p.imageUrl} alt={p.name} />}
-                  <AvatarFallback className="font-heading">
+                  <AvatarFallback className="font-heading bg-gradient-to-br from-primary/25 to-primary/5">
                     {(p.brand ?? p.name).slice(0, 1).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -184,8 +192,8 @@ export default function Home() {
               </CardHeader>
               {p.accords.length > 0 && (
                 <CardContent className="flex flex-wrap gap-1">
-                  {p.accords.slice(0, 5).map((a) => (
-                    <Badge key={a} variant="secondary" className="capitalize">
+                  {p.accords.slice(0, 5).map((a, i) => (
+                    <Badge key={a} variant={i === 0 ? "default" : "secondary"} className="capitalize">
                       {a}
                     </Badge>
                   ))}

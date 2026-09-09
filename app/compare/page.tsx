@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, InfoIcon } from "lucide-react";
+import { ArrowLeftIcon, InfoIcon, ScaleIcon } from "lucide-react";
 import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -103,7 +103,10 @@ export default async function ComparePage({
         <ArrowLeftIcon className="size-4" />
         Back to search
       </Link>
-      <h1 className="text-2xl font-semibold tracking-tight">Compare</h1>
+      <h1 className="flex items-center gap-2 text-3xl font-semibold tracking-tight">
+        <ScaleIcon className="size-7 text-primary" />
+        Compare
+      </h1>
 
       <Card className="py-0">
         <Table>
@@ -113,9 +116,9 @@ export default async function ComparePage({
               {perfumes.map((p) => (
                 <TableHead key={p.id} className="whitespace-normal align-top bg-muted/30 py-3">
                   <div className="flex items-center gap-2">
-                    <Avatar>
+                    <Avatar className="ring-2 ring-primary/20 ring-offset-2 ring-offset-card">
                       {p.imageUrl && <AvatarImage src={p.imageUrl} alt={p.name} />}
-                      <AvatarFallback className="font-heading">
+                      <AvatarFallback className="font-heading bg-gradient-to-br from-primary/25 to-primary/5">
                         {(p.brand ?? p.name).slice(0, 1).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
