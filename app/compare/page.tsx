@@ -1,6 +1,7 @@
 import { ArrowLeftIcon, InfoIcon } from "lucide-react";
 import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
@@ -102,7 +103,7 @@ export default async function ComparePage({
         <ArrowLeftIcon className="size-4" />
         Back to search
       </Link>
-      <h1 className="text-2xl font-semibold">Compare</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Compare</h1>
 
       <Card className="py-0">
         <Table>
@@ -111,13 +112,23 @@ export default async function ComparePage({
               <TableHead className="bg-muted/30"></TableHead>
               {perfumes.map((p) => (
                 <TableHead key={p.id} className="whitespace-normal align-top bg-muted/30 py-3">
-                  <Link href={`/perfume/${p.id}`} className="hover:underline font-medium">
-                    {p.name}
-                  </Link>
-                  <div className="text-xs text-muted-foreground font-normal">
-                    {p.brand}
-                    {p.releaseYear ? ` · ${p.releaseYear}` : ""}
-                    {p.rating ? ` · ★${p.rating.toFixed(1)}` : ""}
+                  <div className="flex items-center gap-2">
+                    <Avatar>
+                      {p.imageUrl && <AvatarImage src={p.imageUrl} alt={p.name} />}
+                      <AvatarFallback className="font-heading">
+                        {(p.brand ?? p.name).slice(0, 1).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <Link href={`/perfume/${p.id}`} className="hover:underline font-medium">
+                        {p.name}
+                      </Link>
+                      <div className="text-xs text-muted-foreground font-normal">
+                        {p.brand}
+                        {p.releaseYear ? ` · ${p.releaseYear}` : ""}
+                        {p.rating ? ` · ★${p.rating.toFixed(1)}` : ""}
+                      </div>
+                    </div>
                   </div>
                 </TableHead>
               ))}
