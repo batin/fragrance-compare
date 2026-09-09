@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { getPerfumeDetail, getSimilarPerfumes } from "@/lib/perfumes";
 
@@ -61,43 +61,50 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
         </div>
       </section>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="flex items-center gap-2 font-heading font-medium text-lg">
+      <section className="flex flex-col gap-4 items-center">
+        <h2 className="self-start flex items-center gap-2 font-heading font-medium text-lg">
           <LayersIcon className="size-5 text-primary" />
           Note pyramid
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {(["top", "middle", "base"] as const).map((position) => (
-            <Card key={position}>
-              <CardHeader>
-                <CardTitle className="capitalize">{position} notes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="text-sm text-muted-foreground capitalize flex flex-col gap-1">
+        <div className="flex flex-col items-center gap-3 w-full">
+          {(
+            [
+              { position: "top" as const, width: "max-w-xs", tint: "bg-primary/5" },
+              { position: "middle" as const, width: "max-w-md", tint: "bg-primary/10" },
+              { position: "base" as const, width: "max-w-2xl", tint: "bg-primary/15" },
+            ]
+          ).map(({ position, width, tint }) => (
+            <div key={position} className={`w-full ${width} rounded-2xl border ${tint} px-6 py-4 text-center`}>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                {position} notes
+              </p>
+              {perfume.notes[position].length === 0 ? (
+                <p className="text-sm text-muted-foreground italic">—</p>
+              ) : (
+                <div className="flex flex-wrap justify-center gap-1.5">
                   {perfume.notes[position].map((n) => (
-                    <li key={n}>{n}</li>
+                    <Badge key={n} variant="secondary" className="capitalize">
+                      {n}
+                    </Badge>
                   ))}
-                  {perfume.notes[position].length === 0 && <li className="italic">—</li>}
-                </ul>
-              </CardContent>
-            </Card>
+                </div>
+              )}
+            </div>
           ))}
           {perfume.notes.unspecified.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-1.5">
-                  <DropletsIcon className="size-4" />
-                  Notes
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="text-sm text-muted-foreground capitalize flex flex-col gap-1">
-                  {perfume.notes.unspecified.map((n) => (
-                    <li key={n}>{n}</li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+            <div className="w-full max-w-2xl rounded-2xl border px-6 py-4 text-center">
+              <p className="flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                <DropletsIcon className="size-3.5" />
+                Notes
+              </p>
+              <div className="flex flex-wrap justify-center gap-1.5">
+                {perfume.notes.unspecified.map((n) => (
+                  <Badge key={n} variant="secondary" className="capitalize">
+                    {n}
+                  </Badge>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </section>
