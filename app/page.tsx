@@ -114,7 +114,7 @@ export default function Home() {
         <AsyncCombobox endpoint="/api/brands" value={brand} onValueChange={setBrand} placeholder="Brand" />
         <AsyncCombobox endpoint="/api/notes" value={note} onValueChange={setNote} placeholder="Note" />
         <Select value={accord ?? ""} onValueChange={(v) => setAccord(v || null)}>
-          <SelectTrigger>
+          <SelectTrigger className="w-40">
             <SelectValue placeholder="Accord" className="capitalize" />
           </SelectTrigger>
           <SelectContent alignItemWithTrigger={false}>
