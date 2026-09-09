@@ -85,7 +85,7 @@ export default async function ComparePage({
         {perfumes.map((p) => (
           <Card key={p.id} className="min-w-72 flex-1 shrink-0">
             <CardHeader className="flex-row items-center gap-3">
-              <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-muted to-muted/50">
+              <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-white">
                 {p.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={p.imageUrl} alt={p.name} className="absolute inset-0 size-full object-contain p-2" />

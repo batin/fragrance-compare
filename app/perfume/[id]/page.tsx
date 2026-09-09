@@ -24,7 +24,7 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
       <div className="relative overflow-hidden rounded-3xl border bg-card px-6 py-8 sm:px-8 sm:py-10">
         <div className="pointer-events-none absolute -top-20 -right-20 size-56 rounded-full bg-primary/15 blur-3xl" />
         <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-6">
-          <div className="relative w-40 aspect-[4/5] shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-muted to-muted/50">
+          <div className="relative w-40 aspect-[4/5] shrink-0 overflow-hidden rounded-2xl bg-white">
             {perfume.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -125,7 +125,7 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
           {similar.map((s) => (
             <Link key={s.id} href={`/perfume/${s.id}`}>
               <Card className="flex-row items-center gap-3 py-2 pr-4 pl-2 transition-all hover:-translate-y-0.5 hover:shadow-lg">
-                <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-muted to-muted/50">
+                <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-white">
                   {s.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={s.imageUrl} alt={s.name} className="absolute inset-0 size-full object-contain p-1.5" />

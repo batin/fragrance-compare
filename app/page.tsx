@@ -175,7 +175,7 @@ export default function Home() {
               className="absolute top-3 right-3 z-10 bg-background"
             />
             <Link href={`/perfume/${p.id}`} className="flex flex-col">
-              <div className="relative aspect-[4/5] w-full bg-card">
+              <div className="relative aspect-[4/5] w-full bg-white">
                 {p.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
