@@ -57,3 +57,7 @@ npm test
 - **Compare** (`/compare?ids=1,2,3`) — side-by-side note/accord comparison, shared items highlighted.
 - **Similarity** — weighted Jaccard similarity over notes + accords (accords count double, since
   they're a broader signal than any single note). See `lib/similarity.ts`.
+- **Images** — the dataset has no image column, but every Fragrantica page URL ends in `-<id>.html`,
+  and that same id maps to a real product photo on Fragrantica's CDN
+  (`https://fimgs.net/mdimg/perfume/375x500.<id>.jpg`). The importer derives image URLs this way;
+  see `imageUrlFromFragranticaUrl` in `scripts/csv-utils.ts`.

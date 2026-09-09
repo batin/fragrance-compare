@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   detectDelimiter,
+  imageUrlFromFragranticaUrl,
   numberedColumns,
   parseDecimal,
   parseListField,
@@ -87,5 +88,19 @@ describe("titleCaseSlug", () => {
 
   it("capitalizes single lowercase words with no hyphen", () => {
     expect(titleCaseSlug("chanel")).toBe("Chanel");
+  });
+});
+
+describe("imageUrlFromFragranticaUrl", () => {
+  it("extracts the numeric id and builds a fimgs.net image URL", () => {
+    expect(imageUrlFromFragranticaUrl("https://www.fragrantica.com/perfume/xerjoff/accento-overdose-pride-edition-74630.html")).toBe(
+      "https://fimgs.net/mdimg/perfume/375x500.74630.jpg",
+    );
+  });
+
+  it("returns null when the URL has no trailing numeric id", () => {
+    expect(imageUrlFromFragranticaUrl("https://www.fragrantica.com/perfume/xerjoff/no-id.html")).toBeNull();
+    expect(imageUrlFromFragranticaUrl(undefined)).toBeNull();
+    expect(imageUrlFromFragranticaUrl(null)).toBeNull();
   });
 });

@@ -18,6 +18,7 @@ import { join } from "node:path";
 import { getDb } from "../lib/db";
 import {
   detectDelimiter,
+  imageUrlFromFragranticaUrl,
   numberedColumns,
   parseDecimal,
   parseListField,
@@ -157,6 +158,8 @@ function main() {
       const year = yearRaw ? Number.parseInt(yearRaw, 10) : null;
 
       const rating = col.rating ? parseDecimal(row[col.rating]) : null;
+      const url = col.url ? row[col.url]?.trim() : undefined;
+      const imageUrl = (col.imageUrl ? row[col.imageUrl]?.trim() : undefined) || imageUrlFromFragranticaUrl(url);
 
       const perfumeId = Number(
         insertPerfume.run(
@@ -165,8 +168,8 @@ function main() {
           col.gender ? (row[col.gender]?.trim() ?? null) : null,
           Number.isFinite(year) ? year : null,
           Number.isFinite(rating) ? rating : null,
-          col.imageUrl ? (row[col.imageUrl]?.trim() ?? null) : null,
-          col.url ? (row[col.url]?.trim() ?? null) : null,
+          imageUrl,
+          url ?? null,
         ).lastInsertRowid,
       );
 

@@ -45,3 +45,12 @@ export function titleCaseSlug(slug: string): string {
     .map((word) => (word.length === 0 ? word : word[0].toUpperCase() + word.slice(1)))
     .join(" ");
 }
+
+/**
+ * Fragrantica page URLs end in "-<id>.html"; that same id maps to a real product photo
+ * on Fragrantica's image CDN, so we can get real images without a dedicated image column.
+ */
+export function imageUrlFromFragranticaUrl(url: string | undefined | null): string | null {
+  const match = url?.match(/-(\d+)\.html$/);
+  return match ? `https://fimgs.net/mdimg/perfume/375x500.${match[1]}.jpg` : null;
+}
