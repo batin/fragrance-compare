@@ -3,9 +3,8 @@ import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getPerfumeDetail, type PerfumeDetail } from "@/lib/perfumes";
 
 function countIn(others: PerfumeDetail[], key: "notes" | "accords") {
@@ -13,45 +12,22 @@ function countIn(others: PerfumeDetail[], key: "notes" | "accords") {
     others.filter((o) => (key === "accords" ? o.accords : Object.values(o.notes).flat()).includes(item)).length;
 }
 
-function ChipRow({
-  label,
-  perfumes,
-  allValues,
-  valuesFor,
-  countKey,
-}: {
-  label: string;
-  perfumes: PerfumeDetail[];
-  allValues: string[];
-  valuesFor: (p: PerfumeDetail) => string[];
-  countKey: "notes" | "accords";
-}) {
+function ChipGroup({ label, values, isShared }: { label: string; values: string[]; isShared: (v: string) => boolean }) {
   return (
-    <TableRow>
-      <TableCell className="font-medium align-top text-muted-foreground">{label}</TableCell>
-      {perfumes.map((p) => {
-        const values = allValues.filter((v) => valuesFor(p).includes(v));
-        return (
-          <TableCell key={p.id} className="align-top whitespace-normal">
-            {values.length === 0 ? (
-              <span className="text-muted-foreground">—</span>
-            ) : (
-              <div className="flex flex-wrap gap-1">
-                {values.map((v) => (
-                  <Badge
-                    key={v}
-                    variant={countIn(perfumes, countKey)(v) > 1 ? "default" : "secondary"}
-                    className="capitalize"
-                  >
-                    {v}
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </TableCell>
-        );
-      })}
-    </TableRow>
+    <div className="flex flex-col gap-1.5">
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
+      {values.length === 0 ? (
+        <span className="text-sm text-muted-foreground">—</span>
+      ) : (
+        <div className="flex flex-wrap gap-1">
+          {values.map((v) => (
+            <Badge key={v} variant={isShared(v) ? "default" : "secondary"} className="capitalize">
+              {v}
+            </Badge>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -87,18 +63,16 @@ export default async function ComparePage({
     );
   }
 
-  const allAccords = Array.from(new Set(perfumes.flatMap((p) => p.accords))).sort();
   const noteRows: Array<{ label: string; key: "top" | "middle" | "base" }> = [
     { label: "Top notes", key: "top" },
     { label: "Middle notes", key: "middle" },
     { label: "Base notes", key: "base" },
   ];
-  const allNotesByPosition = Object.fromEntries(
-    noteRows.map(({ key }) => [key, Array.from(new Set(perfumes.flatMap((p) => p.notes[key]))).sort()]),
-  ) as Record<"top" | "middle" | "base", string[]>;
+  const isAccordShared = (v: string) => countIn(perfumes, "accords")(v) > 1;
+  const isNoteShared = (v: string) => countIn(perfumes, "notes")(v) > 1;
 
   return (
-    <main className="max-w-5xl mx-auto p-6 w-full flex flex-col gap-4">
+    <main className="max-w-6xl mx-auto p-6 w-full flex flex-col gap-4">
       <Link href="/" className="inline-flex items-center gap-1 text-sm text-primary hover:underline w-fit">
         <ArrowLeftIcon className="size-4" />
         Back to search
@@ -108,56 +82,36 @@ export default async function ComparePage({
         Compare
       </h1>
 
-      <Card className="py-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="bg-muted/30"></TableHead>
-              {perfumes.map((p) => (
-                <TableHead key={p.id} className="whitespace-normal align-top bg-muted/30 py-3">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="ring-2 ring-primary/20 ring-offset-2 ring-offset-card">
-                      {p.imageUrl && <AvatarImage src={p.imageUrl} alt={p.name} />}
-                      <AvatarFallback className="font-heading bg-gradient-to-br from-primary/25 to-primary/5">
-                        {(p.brand ?? p.name).slice(0, 1).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <Link href={`/perfume/${p.id}`} className="hover:underline font-medium">
-                        {p.name}
-                      </Link>
-                      <div className="text-xs text-muted-foreground font-normal">
-                        {p.brand}
-                        {p.releaseYear ? ` · ${p.releaseYear}` : ""}
-                        {p.rating ? ` · ★${p.rating.toFixed(1)}` : ""}
-                      </div>
-                    </div>
-                  </div>
-                </TableHead>
+      <div className="flex gap-4 overflow-x-auto pb-2">
+        {perfumes.map((p) => (
+          <Card key={p.id} className="min-w-72 flex-1 shrink-0">
+            <CardHeader className="flex-row items-center gap-3">
+              <Avatar size="lg" className="ring-2 ring-primary/20 ring-offset-2 ring-offset-card">
+                {p.imageUrl && <AvatarImage src={p.imageUrl} alt={p.name} />}
+                <AvatarFallback className="font-heading bg-gradient-to-br from-primary/25 to-primary/5">
+                  {(p.brand ?? p.name).slice(0, 1).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <Link href={`/perfume/${p.id}`} className="hover:underline">
+                  <CardTitle className="truncate">{p.name}</CardTitle>
+                </Link>
+                <p className="text-xs text-muted-foreground">
+                  {p.brand}
+                  {p.releaseYear ? ` · ${p.releaseYear}` : ""}
+                  {p.rating ? ` · ★${p.rating.toFixed(1)}` : ""}
+                </p>
+              </div>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <ChipGroup label="Accords" values={p.accords} isShared={isAccordShared} />
+              {noteRows.map(({ label, key }) => (
+                <ChipGroup key={key} label={label} values={p.notes[key]} isShared={isNoteShared} />
               ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <ChipRow
-              label="Accords"
-              perfumes={perfumes}
-              allValues={allAccords}
-              valuesFor={(p) => p.accords}
-              countKey="accords"
-            />
-            {noteRows.map(({ label, key }) => (
-              <ChipRow
-                key={key}
-                label={label}
-                perfumes={perfumes}
-                allValues={allNotesByPosition[key]}
-                valuesFor={(p) => p.notes[key]}
-                countKey="notes"
-              />
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
       <Alert>
         <InfoIcon />
