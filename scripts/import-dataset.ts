@@ -12,10 +12,10 @@
  * if it can't find a column it needs, it prints which CSV/column is missing so
  * you can add the real header name to the alias list.
  */
+import Database from "better-sqlite3";
 import { parse } from "csv-parse/sync";
-import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { getDb } from "../lib/db";
+import { mkdirSync, readdirSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import {
   detectDelimiter,
   imageUrlFromFragranticaUrl,
@@ -27,6 +27,17 @@ import {
 } from "./csv-utils";
 
 const DATA_DIR = process.env.DATASET_DIR ?? join(process.cwd(), "data");
+const DB_PATH = process.env.DATABASE_PATH ?? join(process.cwd(), "data", "parfumes.db");
+
+/** Opens a writable connection and (re)applies the schema — this script is the only writer. */
+function openWritableDb(): Database.Database {
+  mkdirSync(dirname(DB_PATH), { recursive: true });
+  const db = new Database(DB_PATH);
+  db.pragma("foreign_keys = ON");
+  const schema = readFileSync(join(process.cwd(), "lib", "schema.sql"), "utf-8");
+  db.exec(schema);
+  return db;
+}
 
 const COLUMN_ALIASES = {
   name: ["name", "perfume", "title"],
@@ -103,7 +114,7 @@ function main() {
   const accordColumns = col.accords ? [col.accords] : numberedColumns(headers, "mainaccord");
   const perfumerColumns = col.perfumers ? [col.perfumers] : numberedColumns(headers, "perfumer");
 
-  const db = getDb();
+  const db = openWritableDb();
 
   const getOrCreate = (table: "brands" | "perfumers" | "notes" | "accords") => {
     const select = db.prepare(`SELECT id FROM ${table} WHERE name = ?`);
@@ -221,6 +232,7 @@ function main() {
     const { count } = db.prepare(`SELECT COUNT(*) as count FROM ${table}`).get() as { count: number };
     console.log(`  ${table}: ${count}`);
   }
+  db.close();
 }
 
 main();

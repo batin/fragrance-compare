@@ -36,8 +36,10 @@ yarn-error.log*
 # vercel
 .vercel
 
-# perfume dataset (downloaded via kaggle CLI, not committed)
-/data/
+# perfume dataset (downloaded via kaggle CLI, not committed) — but the
+# built SQLite DB IS committed, since the deployed app ships with it
+/data/*
+!/data/parfumes.db
 *.sqlite
 *.sqlite3
 
