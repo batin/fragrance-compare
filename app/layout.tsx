@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Parfume Compare",
+  title: "Fragrance Compare",
   description: "Search, compare, and find perfumes with similar notes and accords.",
 };
 

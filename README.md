@@ -1,4 +1,4 @@
-# Parfume Compare
+# Fragrance Compare
 
 Search perfumes, compare their notes/accords side by side, and find similar fragrances —
 backed by a local SQLite DB built from an open Fragrantica dataset. No scraping, no auth.
