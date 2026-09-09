@@ -107,21 +107,21 @@ export function searchPerfumes(
   return rows.map((row) => ({ ...rowToSummary(row), accords: accordsByPerfume.get(row.id) ?? [] }));
 }
 
-export function searchBrands(query: string, limit = 20): string[] {
+export function searchBrands(query: string, limit = 20, offset = 0): string[] {
   const db = getDb();
   return (
     db
-      .prepare(`SELECT name FROM brands WHERE name LIKE ? ORDER BY name ASC LIMIT ?`)
-      .all(`%${query}%`, limit) as { name: string }[]
+      .prepare(`SELECT name FROM brands WHERE name LIKE ? ORDER BY name ASC LIMIT ? OFFSET ?`)
+      .all(`%${query}%`, limit, offset) as { name: string }[]
   ).map((r) => r.name);
 }
 
-export function searchNotes(query: string, limit = 20): string[] {
+export function searchNotes(query: string, limit = 20, offset = 0): string[] {
   const db = getDb();
   return (
     db
-      .prepare(`SELECT name FROM notes WHERE name LIKE ? ORDER BY name ASC LIMIT ?`)
-      .all(`%${query}%`, limit) as { name: string }[]
+      .prepare(`SELECT name FROM notes WHERE name LIKE ? ORDER BY name ASC LIMIT ? OFFSET ?`)
+      .all(`%${query}%`, limit, offset) as { name: string }[]
   ).map((r) => r.name);
 }
 

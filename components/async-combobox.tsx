@@ -10,7 +10,12 @@ import {
   ComboboxList,
 } from "@/components/ui/combobox";
 
-/** A combobox whose options come from a server endpoint (`GET endpoint?q=`), for large option sets. */
+const PAGE_SIZE = 20;
+
+/**
+ * A combobox whose options come from a server endpoint (`GET endpoint?q=&offset=`),
+ * for option sets too large to fetch all at once. Loads more as the list is scrolled.
+ */
 export function AsyncCombobox({
   endpoint,
   value,
@@ -24,13 +29,18 @@ export function AsyncCombobox({
 }) {
   const [inputValue, setInputValue] = useState(value ?? "");
   const [items, setItems] = useState<string[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
     const timeout = setTimeout(() => {
       fetch(`${endpoint}?q=${encodeURIComponent(inputValue)}`, { signal: controller.signal })
         .then((res) => res.json())
-        .then(setItems)
+        .then((data: string[]) => {
+          setItems(data);
+          setHasMore(data.length === PAGE_SIZE);
+        })
         .catch(() => {});
     }, 150);
     return () => {
@@ -38,6 +48,24 @@ export function AsyncCombobox({
       controller.abort();
     };
   }, [inputValue, endpoint]);
+
+  function loadMore() {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    fetch(`${endpoint}?q=${encodeURIComponent(inputValue)}&offset=${items.length}`)
+      .then((res) => res.json())
+      .then((data: string[]) => {
+        setItems((prev) => [...prev, ...data]);
+        setHasMore(data.length === PAGE_SIZE);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingMore(false));
+  }
+
+  function handleScroll(e: React.UIEvent<HTMLDivElement>) {
+    const el = e.currentTarget;
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 80) loadMore();
+  }
 
   return (
     <Combobox
@@ -51,7 +79,7 @@ export function AsyncCombobox({
       <ComboboxInput placeholder={placeholder} showClear />
       <ComboboxContent>
         <ComboboxEmpty>No results</ComboboxEmpty>
-        <ComboboxList>
+        <ComboboxList onScroll={handleScroll}>
           {(item: string) => (
             <ComboboxItem key={item} value={item}>
               {item}
