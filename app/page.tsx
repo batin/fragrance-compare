@@ -117,7 +117,7 @@ export default function Home() {
           <SelectTrigger>
             <SelectValue placeholder="Accord" className="capitalize" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent alignItemWithTrigger={false}>
             {accordOptions.map((a) => (
               <SelectItem key={a} value={a} className="capitalize">
                 {a}
