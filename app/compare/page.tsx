@@ -1,9 +1,57 @@
+import { ArrowLeftIcon, InfoIcon } from "lucide-react";
 import Link from "next/link";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getPerfumeDetail, type PerfumeDetail } from "@/lib/perfumes";
 
 function countIn(others: PerfumeDetail[], key: "notes" | "accords") {
   return (item: string) =>
     others.filter((o) => (key === "accords" ? o.accords : Object.values(o.notes).flat()).includes(item)).length;
+}
+
+function ChipRow({
+  label,
+  perfumes,
+  allValues,
+  valuesFor,
+  countKey,
+}: {
+  label: string;
+  perfumes: PerfumeDetail[];
+  allValues: string[];
+  valuesFor: (p: PerfumeDetail) => string[];
+  countKey: "notes" | "accords";
+}) {
+  return (
+    <TableRow>
+      <TableCell className="font-medium align-top text-muted-foreground">{label}</TableCell>
+      {perfumes.map((p) => {
+        const values = allValues.filter((v) => valuesFor(p).includes(v));
+        return (
+          <TableCell key={p.id} className="align-top whitespace-normal">
+            {values.length === 0 ? (
+              <span className="text-muted-foreground">—</span>
+            ) : (
+              <div className="flex flex-wrap gap-1">
+                {values.map((v) => (
+                  <Badge
+                    key={v}
+                    variant={countIn(perfumes, countKey)(v) > 1 ? "default" : "secondary"}
+                    className="capitalize"
+                  >
+                    {v}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </TableCell>
+        );
+      })}
+    </TableRow>
+  );
 }
 
 export default async function ComparePage({
@@ -24,90 +72,83 @@ export default async function ComparePage({
   if (perfumes.length === 0) {
     return (
       <main className="max-w-4xl mx-auto p-6 w-full">
-        <p>
-          No perfumes selected.{" "}
-          <Link href="/" className="text-blue-600 underline">
-            Go pick some to compare
-          </Link>
-          .
-        </p>
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>No perfumes selected</EmptyTitle>
+            <EmptyDescription>
+              <Link href="/" className="text-primary hover:underline">
+                Go pick some to compare
+              </Link>
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       </main>
     );
   }
 
   const allAccords = Array.from(new Set(perfumes.flatMap((p) => p.accords))).sort();
-  const allNotes = Array.from(new Set(perfumes.flatMap((p) => Object.values(p.notes).flat()))).sort();
+  const noteRows: Array<{ label: string; key: "top" | "middle" | "base" }> = [
+    { label: "Top notes", key: "top" },
+    { label: "Middle notes", key: "middle" },
+    { label: "Base notes", key: "base" },
+  ];
+  const allNotesByPosition = Object.fromEntries(
+    noteRows.map(({ key }) => [key, Array.from(new Set(perfumes.flatMap((p) => p.notes[key]))).sort()]),
+  ) as Record<"top" | "middle" | "base", string[]>;
 
   return (
-    <main className="max-w-5xl mx-auto p-6 w-full overflow-x-auto">
-      <Link href="/" className="text-sm text-blue-600 underline">
-        ← Back to search
+    <main className="max-w-5xl mx-auto p-6 w-full flex flex-col gap-4">
+      <Link href="/" className="inline-flex items-center gap-1 text-sm text-primary hover:underline w-fit">
+        <ArrowLeftIcon className="size-4" />
+        Back to search
       </Link>
-      <h1 className="text-2xl font-semibold mt-2 mb-4">Compare</h1>
+      <h1 className="text-2xl font-semibold">Compare</h1>
 
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr>
-            <th className="text-left p-2 border-b"></th>
-            {perfumes.map((p) => (
-              <th key={p.id} className="text-left p-2 border-b">
-                <Link href={`/perfume/${p.id}`} className="hover:underline">
-                  {p.name}
-                </Link>
-                <div className="text-xs text-gray-500 font-normal">{p.brand}</div>
-              </th>
+      <Card className="py-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="bg-muted/30"></TableHead>
+              {perfumes.map((p) => (
+                <TableHead key={p.id} className="whitespace-normal align-top bg-muted/30 py-3">
+                  <Link href={`/perfume/${p.id}`} className="hover:underline font-medium">
+                    {p.name}
+                  </Link>
+                  <div className="text-xs text-muted-foreground font-normal">
+                    {p.brand}
+                    {p.releaseYear ? ` · ${p.releaseYear}` : ""}
+                    {p.rating ? ` · ★${p.rating.toFixed(1)}` : ""}
+                  </div>
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <ChipRow
+              label="Accords"
+              perfumes={perfumes}
+              allValues={allAccords}
+              valuesFor={(p) => p.accords}
+              countKey="accords"
+            />
+            {noteRows.map(({ label, key }) => (
+              <ChipRow
+                key={key}
+                label={label}
+                perfumes={perfumes}
+                allValues={allNotesByPosition[key]}
+                valuesFor={(p) => p.notes[key]}
+                countKey="notes"
+              />
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td className="p-2 font-medium align-top">Accords</td>
-            {perfumes.map((p) => (
-              <td key={p.id} className="p-2 align-top">
-                {allAccords
-                  .filter((a) => p.accords.includes(a))
-                  .map((a) => (
-                    <span
-                      key={a}
-                      className={`inline-block text-xs rounded-full px-2 py-1 mr-1 mb-1 ${
-                        countIn(perfumes, "accords")(a) > 1
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {a}
-                    </span>
-                  ))}
-              </td>
-            ))}
-          </tr>
-          <tr>
-            <td className="p-2 font-medium align-top">Notes</td>
-            {perfumes.map((p) => {
-              const notes = Object.values(p.notes).flat();
-              return (
-                <td key={p.id} className="p-2 align-top">
-                  {allNotes
-                    .filter((n) => notes.includes(n))
-                    .map((n) => (
-                      <span
-                        key={n}
-                        className={`inline-block text-xs rounded-full px-2 py-1 mr-1 mb-1 ${
-                          countIn(perfumes, "notes")(n) > 1
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {n}
-                      </span>
-                    ))}
-                </td>
-              );
-            })}
-          </tr>
-        </tbody>
-      </table>
-      <p className="text-xs text-gray-400 mt-3">Green = shared with at least one other selected perfume.</p>
+          </TableBody>
+        </Table>
+      </Card>
+
+      <Alert>
+        <InfoIcon />
+        <AlertDescription>Highlighted chips are shared with at least one other selected perfume.</AlertDescription>
+      </Alert>
     </main>
   );
 }

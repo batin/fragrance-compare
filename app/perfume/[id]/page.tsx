@@ -1,5 +1,9 @@
+import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { getPerfumeDetail, getSimilarPerfumes } from "@/lib/perfumes";
 
 export default async function PerfumePage({ params }: { params: Promise<{ id: string }> }) {
@@ -11,70 +15,93 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
   const similar = getSimilarPerfumes(perfume.id);
 
   return (
-    <main className="max-w-3xl mx-auto p-6 w-full">
-      <Link href="/" className="text-sm text-blue-600 underline">
-        ← Back to search
+    <main className="max-w-3xl mx-auto p-6 w-full flex flex-col gap-6">
+      <Link href="/" className="inline-flex items-center gap-1 text-sm text-primary hover:underline w-fit">
+        <ArrowLeftIcon className="size-4" />
+        Back to search
       </Link>
 
-      <h1 className="text-2xl font-semibold mt-2">{perfume.name}</h1>
-      <p className="text-gray-500">
-        {perfume.brand} {perfume.releaseYear ? `· ${perfume.releaseYear}` : ""}{" "}
-        {perfume.rating ? `· ★${perfume.rating.toFixed(1)}` : ""}
-      </p>
-      {perfume.perfumers.length > 0 && (
-        <p className="text-sm text-gray-500">Perfumer(s): {perfume.perfumers.join(", ")}</p>
-      )}
+      <div>
+        {perfume.imageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={perfume.imageUrl}
+            alt={perfume.name}
+            className="w-32 h-32 rounded-lg object-cover mb-4"
+          />
+        )}
+        <h1 className="text-2xl font-semibold">{perfume.name}</h1>
+        <p className="text-muted-foreground">
+          {perfume.brand} {perfume.releaseYear ? `· ${perfume.releaseYear}` : ""}{" "}
+          {perfume.rating ? `· ★${perfume.rating.toFixed(1)}` : ""}
+        </p>
+        {perfume.perfumers.length > 0 && (
+          <p className="text-sm text-muted-foreground">
+            Perfumer(s): <span className="capitalize">{perfume.perfumers.join(", ")}</span>
+          </p>
+        )}
+      </div>
 
-      <section className="mt-6">
-        <h2 className="font-medium mb-2">Accords</h2>
-        <div className="flex flex-wrap gap-2">
+      <Card>
+        <CardHeader>
+          <CardTitle>Accords</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
           {perfume.accords.map((a) => (
-            <span key={a} className="text-xs bg-gray-100 rounded-full px-3 py-1">
+            <Badge key={a} variant="secondary" className="capitalize">
               {a}
-            </span>
+            </Badge>
           ))}
-        </div>
-      </section>
+        </CardContent>
+      </Card>
 
-      <section className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {(["top", "middle", "base"] as const).map((position) => (
-          <div key={position}>
-            <h3 className="font-medium capitalize mb-1">{position} notes</h3>
-            <ul className="text-sm text-gray-600 list-disc list-inside">
-              {perfume.notes[position].map((n) => (
-                <li key={n}>{n}</li>
-              ))}
-            </ul>
-          </div>
+          <Card key={position}>
+            <CardHeader>
+              <CardTitle className="capitalize">{position} notes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-sm text-muted-foreground capitalize flex flex-col gap-1">
+                {perfume.notes[position].map((n) => (
+                  <li key={n}>{n}</li>
+                ))}
+                {perfume.notes[position].length === 0 && <li className="italic">—</li>}
+              </ul>
+            </CardContent>
+          </Card>
         ))}
         {perfume.notes.unspecified.length > 0 && (
-          <div>
-            <h3 className="font-medium mb-1">Notes</h3>
-            <ul className="text-sm text-gray-600 list-disc list-inside">
-              {perfume.notes.unspecified.map((n) => (
-                <li key={n}>{n}</li>
-              ))}
-            </ul>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Notes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-sm text-muted-foreground capitalize flex flex-col gap-1">
+                {perfume.notes.unspecified.map((n) => (
+                  <li key={n}>{n}</li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
         )}
-      </section>
+      </div>
 
-      <section className="mt-8">
+      <div>
         <h2 className="font-medium mb-2">Similar perfumes</h2>
-        <ul className="divide-y">
-          {similar.map((s) => (
-            <li key={s.id} className="py-2">
-              <Link href={`/perfume/${s.id}`} className="hover:underline">
-                {s.name}
+        <div className="flex flex-col">
+          {similar.map((s, i) => (
+            <div key={s.id}>
+              {i > 0 && <Separator />}
+              <Link href={`/perfume/${s.id}`} className="flex items-center justify-between py-2 hover:underline">
+                <span>{s.name}</span>
+                <CardDescription>{s.brand}</CardDescription>
               </Link>
-              <span className="text-sm text-gray-500"> — {s.brand}</span>
-            </li>
+            </div>
           ))}
-          {similar.length === 0 && (
-            <li className="py-2 text-gray-500">No similar perfumes found.</li>
-          )}
-        </ul>
-      </section>
+          {similar.length === 0 && <p className="text-muted-foreground py-2">No similar perfumes found.</p>}
+        </div>
+      </div>
     </main>
   );
 }

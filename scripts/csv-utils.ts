@@ -14,3 +14,34 @@ export function parseListField(raw: string | undefined | null): string[] {
     .filter((s) => s.length > 0 && s !== "n/a" && s !== "-");
   return Array.from(new Set(parts));
 }
+
+/** Guess a CSV's field delimiter from its header line (some Fragrantica exports use ';', not ','). */
+export function detectDelimiter(headerLine: string): "," | ";" {
+  const semicolons = (headerLine.match(/;/g) ?? []).length;
+  const commas = (headerLine.match(/,/g) ?? []).length;
+  return semicolons > commas ? ";" : ",";
+}
+
+/** Find headers like "mainaccord1", "mainaccord2", ... for a given prefix, sorted by their number. */
+export function numberedColumns(headers: string[], prefix: string): string[] {
+  const normalizedPrefix = prefix.toLowerCase();
+  return headers
+    .filter((h) => h.toLowerCase().startsWith(normalizedPrefix) && /\d+$/.test(h))
+    .sort((a, b) => Number(a.match(/\d+$/)![0]) - Number(b.match(/\d+$/)![0]));
+}
+
+/** Parses a numeric field that may use a European comma decimal separator ("1,42"). */
+export function parseDecimal(raw: string | undefined | null): number | null {
+  if (!raw) return null;
+  const normalized = raw.trim().replace(",", ".");
+  const value = Number.parseFloat(normalized);
+  return Number.isFinite(value) ? value : null;
+}
+
+/** Turns a URL-slug-style name ("jean-paul-gaultier") into a readable title ("Jean Paul Gaultier"). */
+export function titleCaseSlug(slug: string): string {
+  return slug
+    .split("-")
+    .map((word) => (word.length === 0 ? word : word[0].toUpperCase() + word.slice(1)))
+    .join(" ");
+}

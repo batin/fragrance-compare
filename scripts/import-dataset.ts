@@ -16,7 +16,14 @@ import { parse } from "csv-parse/sync";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { getDb } from "../lib/db";
-import { parseListField, resolveColumn } from "./csv-utils";
+import {
+  detectDelimiter,
+  numberedColumns,
+  parseDecimal,
+  parseListField,
+  resolveColumn,
+  titleCaseSlug,
+} from "./csv-utils";
 
 const DATA_DIR = process.env.DATASET_DIR ?? join(process.cwd(), "data");
 
@@ -28,7 +35,7 @@ const COLUMN_ALIASES = {
   rating: ["rating", "rating value", "rating_value"],
   imageUrl: ["image url", "image_url", "main_photo", "photo"],
   url: ["url", "link"],
-  perfumers: ["perfumer", "perfumers", "perfumer1", "nose"],
+  perfumers: ["perfumer", "perfumers", "nose"],
   top: ["top", "top notes", "notes_top"],
   middle: ["middle", "heart", "middle notes", "notes_middle", "heart notes"],
   base: ["base", "base notes", "notes_base"],
@@ -40,7 +47,10 @@ type Row = Record<string, string>;
 
 function findFragrancesCsv(): string {
   const candidates = readdirSync(DATA_DIR).filter((f) => f.toLowerCase().endsWith(".csv"));
-  const preferred = candidates.find((f) => /fragr|perfume/i.test(f)) ?? candidates[0];
+  const preferred =
+    candidates.find((f) => /cleaned/i.test(f)) ??
+    candidates.find((f) => /fragr|perfume/i.test(f)) ??
+    candidates[0];
   if (!preferred) {
     throw new Error(
       `No CSV files found in ${DATA_DIR}. Download the dataset first (see script header comment).`,
@@ -49,9 +59,27 @@ function findFragrancesCsv(): string {
   return join(DATA_DIR, preferred);
 }
 
+/** Reads a CSV, auto-detecting delimiter (`,` vs `;`) and falling back to latin1 if utf-8 looks corrupted. */
 function loadRows(csvPath: string): Row[] {
-  const content = readFileSync(csvPath, "utf-8");
-  return parse(content, { columns: true, skip_empty_lines: true, relax_column_count: true }) as Row[];
+  let content = readFileSync(csvPath, "utf-8");
+  if (content.includes("�")) content = readFileSync(csvPath, "latin1");
+
+  const firstLine = content.slice(0, content.indexOf("\n"));
+  const delimiter = detectDelimiter(firstLine);
+
+  return parse(content, {
+    columns: true,
+    delimiter,
+    skip_empty_lines: true,
+    relax_column_count: true,
+  }) as Row[];
+}
+
+/** Reads all values across a set of numbered columns (e.g. mainaccord1..5) for one row, in order. */
+function readNumberedColumns(row: Row, columns: string[]): string[] {
+  return columns
+    .map((c) => row[c]?.trim())
+    .filter((v): v is string => !!v && v.toLowerCase() !== "nan" && v.toLowerCase() !== "unknown");
 }
 
 function main() {
@@ -70,6 +98,9 @@ function main() {
       `Could not find a "name" column among: ${headers.join(", ")}. Add the real header to COLUMN_ALIASES.name in this script.`,
     );
   }
+
+  const accordColumns = col.accords ? [col.accords] : numberedColumns(headers, "mainaccord");
+  const perfumerColumns = col.perfumers ? [col.perfumers] : numberedColumns(headers, "perfumer");
 
   const db = getDb();
 
@@ -115,17 +146,17 @@ function main() {
 
   const importAll = db.transaction((data: Row[]) => {
     for (const row of data) {
-      const name = col.name && row[col.name]?.trim();
-      if (!name) continue;
+      const rawName = col.name && row[col.name]?.trim();
+      if (!rawName) continue;
+      const name = titleCaseSlug(rawName);
 
-      const brandName = col.brand ? row[col.brand]?.trim() : undefined;
-      const brandId = brandName ? getOrCreateBrand(brandName) : null;
+      const rawBrand = col.brand ? row[col.brand]?.trim() : undefined;
+      const brandId = rawBrand ? getOrCreateBrand(titleCaseSlug(rawBrand)) : null;
 
       const yearRaw = col.year ? row[col.year] : undefined;
       const year = yearRaw ? Number.parseInt(yearRaw, 10) : null;
 
-      const ratingRaw = col.rating ? row[col.rating] : undefined;
-      const rating = ratingRaw ? Number.parseFloat(ratingRaw) : null;
+      const rating = col.rating ? parseDecimal(row[col.rating]) : null;
 
       const perfumeId = Number(
         insertPerfume.run(
@@ -139,10 +170,12 @@ function main() {
         ).lastInsertRowid,
       );
 
-      if (col.perfumers) {
-        for (const perfumer of parseListField(row[col.perfumers])) {
-          insertPerfumePerfumer.run(perfumeId, getOrCreatePerfumer(perfumer));
-        }
+      const perfumerNames =
+        perfumerColumns.length === 1 && col.perfumers
+          ? parseListField(row[col.perfumers])
+          : readNumberedColumns(row, perfumerColumns).map((s) => s.toLowerCase());
+      for (const perfumer of new Set(perfumerNames)) {
+        insertPerfumePerfumer.run(perfumeId, getOrCreatePerfumer(perfumer));
       }
 
       const positioned: Array<[string | undefined, "top" | "middle" | "base"]> = [
@@ -164,11 +197,15 @@ function main() {
         }
       }
 
-      if (col.accords) {
-        for (const accord of parseListField(row[col.accords])) {
-          insertPerfumeAccord.run(perfumeId, getOrCreateAccord(accord), 1);
-        }
-      }
+      const accordNames =
+        accordColumns.length === 1 && col.accords
+          ? parseListField(row[col.accords])
+          : readNumberedColumns(row, accordColumns).map((s) => s.toLowerCase());
+      accordNames.forEach((accord, index) => {
+        // Earlier mainaccordN columns are the more prominent accords; weight strength accordingly.
+        const strength = accordNames.length - index;
+        insertPerfumeAccord.run(perfumeId, getOrCreateAccord(accord), strength);
+      });
 
       imported += 1;
     }
