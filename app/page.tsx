@@ -1,7 +1,6 @@
 "use client";
 
 import { AsyncCombobox } from "@/components/async-combobox";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -35,7 +34,7 @@ export default function Home() {
     fetch("/api/accords")
       .then((res) => res.json())
       .then(setAccordOptions)
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   function filterParams(offset: number) {
@@ -55,7 +54,7 @@ export default function Home() {
         setHasMore(data.length === PAGE_SIZE);
         setSearched(true);
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, brand, note, accord]);
@@ -68,7 +67,7 @@ export default function Home() {
         setResults((prev) => [...prev, ...data]);
         setHasMore(data.length === PAGE_SIZE);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }
 
@@ -165,7 +164,7 @@ export default function Home() {
           <Card
             key={p.id}
             className={cn(
-              "relative gap-3 transition-all hover:-translate-y-1 hover:shadow-lg",
+              "relative gap-0 py-0 transition-all hover:-translate-y-1 hover:shadow-lg",
               selected.includes(p.id) && "ring-2 ring-primary",
             )}
           >
@@ -173,25 +172,31 @@ export default function Home() {
               checked={selected.includes(p.id)}
               onCheckedChange={(checked) => toggleSelected(p.id, checked === true)}
               disabled={!selected.includes(p.id) && selected.length >= MAX_SELECTION}
-              className="absolute top-4 right-4 z-10 bg-background"
+              className="absolute top-3 right-3 z-10 bg-background"
             />
-            <Link href={`/perfume/${p.id}`} className="flex flex-col gap-3">
-              <CardHeader className="flex-row items-center gap-3">
-                <Avatar size="lg" className="ring-2 ring-primary/20 ring-offset-2 ring-offset-card">
-                  {p.imageUrl && <AvatarImage src={p.imageUrl} alt={p.name} />}
-                  <AvatarFallback className="font-heading bg-gradient-to-br from-primary/25 to-primary/5">
+            <Link href={`/perfume/${p.id}`} className="flex flex-col">
+              <div className="relative aspect-[4/5] w-full bg-card">
+                {p.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={p.imageUrl}
+                    alt={p.name}
+                    className="absolute inset-0 size-full object-contain p-6"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center font-heading text-5xl text-primary/40">
                     {(p.brand ?? p.name).slice(0, 1).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 pr-8">
-                  <CardTitle className="truncate">{p.name}</CardTitle>
-                  <CardDescription>
-                    {p.brand} {p.rating ? `· ★${p.rating.toFixed(1)}` : ""}
-                  </CardDescription>
-                </div>
+                  </div>
+                )}
+              </div>
+              <CardHeader className="pt-4">
+                <CardTitle className="truncate">{p.name}</CardTitle>
+                <CardDescription>
+                  {p.brand} {p.rating ? `· ★${p.rating.toFixed(1)}` : ""}
+                </CardDescription>
               </CardHeader>
               {p.accords.length > 0 && (
-                <CardContent className="flex flex-wrap gap-1">
+                <CardContent className="flex flex-wrap gap-1 pb-4">
                   {p.accords.slice(0, 5).map((a, i) => (
                     <Badge key={a} variant={i === 0 ? "default" : "secondary"} className="capitalize">
                       {a}

@@ -1,7 +1,6 @@
 import { ArrowLeftIcon, DropletsIcon, LayersIcon, SparklesIcon, UsersIcon } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
@@ -24,14 +23,22 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
 
       <div className="relative overflow-hidden rounded-3xl border bg-card px-6 py-8 sm:px-8 sm:py-10">
         <div className="pointer-events-none absolute -top-20 -right-20 size-56 rounded-full bg-primary/15 blur-3xl" />
-        <div className="relative flex items-center gap-5">
-          <Avatar className="size-20 shrink-0 ring-2 ring-primary/20 ring-offset-2 ring-offset-card">
-            {perfume.imageUrl && <AvatarImage src={perfume.imageUrl} alt={perfume.name} />}
-            <AvatarFallback className="font-heading text-2xl bg-gradient-to-br from-primary/25 to-primary/5">
-              {(perfume.brand ?? perfume.name).slice(0, 1).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div>
+        <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-6">
+          <div className="relative w-40 aspect-[4/5] shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-muted to-muted/50">
+            {perfume.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={perfume.imageUrl}
+                alt={perfume.name}
+                className="absolute inset-0 size-full object-contain p-4"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center font-heading text-5xl text-primary/40">
+                {(perfume.brand ?? perfume.name).slice(0, 1).toUpperCase()}
+              </div>
+            )}
+          </div>
+          <div className="text-center sm:text-left">
             <h1 className="text-3xl font-semibold tracking-tight">{perfume.name}</h1>
             <p className="text-muted-foreground text-base">
               {perfume.brand} {perfume.releaseYear ? `· ${perfume.releaseYear}` : ""}{" "}
@@ -117,12 +124,17 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {similar.map((s) => (
             <Link key={s.id} href={`/perfume/${s.id}`}>
-              <Card className="flex-row items-center gap-3 py-3 px-4 transition-all hover:-translate-y-0.5 hover:shadow-lg">
-                <Avatar>
-                  <AvatarFallback className="font-heading bg-gradient-to-br from-primary/25 to-primary/5">
-                    {(s.brand ?? s.name).slice(0, 1).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+              <Card className="flex-row items-center gap-3 py-2 pr-4 pl-2 transition-all hover:-translate-y-0.5 hover:shadow-lg">
+                <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-muted to-muted/50">
+                  {s.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={s.imageUrl} alt={s.name} className="absolute inset-0 size-full object-contain p-1.5" />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center font-heading text-lg text-primary/40">
+                      {(s.brand ?? s.name).slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
+                </div>
                 <div className="min-w-0">
                   <p className="font-medium truncate">{s.name}</p>
                   <CardDescription>{s.brand}</CardDescription>

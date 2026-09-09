@@ -1,7 +1,6 @@
 import { ArrowLeftIcon, InfoIcon, ScaleIcon } from "lucide-react";
 import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
@@ -86,12 +85,16 @@ export default async function ComparePage({
         {perfumes.map((p) => (
           <Card key={p.id} className="min-w-72 flex-1 shrink-0">
             <CardHeader className="flex-row items-center gap-3">
-              <Avatar size="lg" className="ring-2 ring-primary/20 ring-offset-2 ring-offset-card">
-                {p.imageUrl && <AvatarImage src={p.imageUrl} alt={p.name} />}
-                <AvatarFallback className="font-heading bg-gradient-to-br from-primary/25 to-primary/5">
-                  {(p.brand ?? p.name).slice(0, 1).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-muted to-muted/50">
+                {p.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={p.imageUrl} alt={p.name} className="absolute inset-0 size-full object-contain p-2" />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center font-heading text-xl text-primary/40">
+                    {(p.brand ?? p.name).slice(0, 1).toUpperCase()}
+                  </div>
+                )}
+              </div>
               <div className="min-w-0">
                 <Link href={`/perfume/${p.id}`} className="hover:underline">
                   <CardTitle className="truncate">{p.name}</CardTitle>
